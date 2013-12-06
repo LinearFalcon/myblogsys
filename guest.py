@@ -33,7 +33,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 class Post(db.Model):
     title = db.StringProperty()
     content = db.StringProperty(indexed=False)
-    created_time = db.DateTimeProperty(auto_now_add=True)
+    created_time = db.DateTimeProperty(auto_now_add=True)   #seems not timezone sensitive, wrong time!!!!!!
     modify_time = db.DateTimeProperty(auto_now=True)  #Whenever post to datastore, it is set to current time
 
 

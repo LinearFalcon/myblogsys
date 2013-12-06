@@ -8,7 +8,7 @@
       <div class="post">
         <div class="post-heading">
           <div class="post-title">{{post.title}}</div> 
-          <div class="post-date">{{post.created_time}}</div>
+          <div class="post-date">{{post.created_time.strftime("%d %b %Y %H:%M:%S GMT")}}</div>
         </div>
         <!--pre tag preserves the white space -->
         <pre class="post-content">{{post.content}}</pre>
