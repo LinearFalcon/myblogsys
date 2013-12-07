@@ -1,0 +1,10 @@
+{% extends "templates/index.html" %}
+
+{% block contents %}
+  <h2>Opus, something went wrong.</h2>
+    you are not owner of this blog, so you cannot post.
+    try this:
+  <a href="/singleblog/{{blogkey}}">
+    <p>Back_to_BlogPage</p>
+    </a>
+{% blockend %}

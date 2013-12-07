@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <body>
+    <h3>Create Blog</h3>
+    
+    <form action="/createblog" method="post">
+      <div><input type="text" name="name"></div>
+      <div><textarea name="description" rows="3" cols="60"></textarea></div>
+      <div><input type="submit" value="create"></div>
+    </form>
+  </body>
+</html>
+{% endautoescape %}

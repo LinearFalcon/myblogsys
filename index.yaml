@@ -10,8 +10,8 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
-- kind: Greeting
+- kind: Post
   ancestor: yes
   properties:
-  - name: date
+  - name: created_time
     direction: desc

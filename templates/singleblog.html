@@ -1,0 +1,23 @@
+{% extends "templates/index.html"  %}
+
+{% block contents %}
+    <h1>MyBlog</h1>
+    <p>
+     <a href = "/post/{{blogkey}}">Post</a>
+    </p>
+    <a href="/">
+    <p>Back_to_Bloglist</p>
+    </a>
+    <div id="content" style="background-color:#EEEEEE;float:left;">
+    {% for post in posts %}  
+      <h3><a href="/singlepost/{{post.key()}}">{{post.title}}</a></h3>
+      <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S GMT")}}</div>
+      <div> 
+      <pre>{{post.content}}</pre>
+     
+      <hr>
+      </div>
+    {% endfor %}
+    
+    </div>
+{% endblock %}
