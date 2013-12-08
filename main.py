@@ -102,7 +102,7 @@ class Postblog(webapp2.RequestHandler):   #1,check whether login in  2,if login,
                 self.response.write(template.render({'blogkey': blogkey}))
             else:
                 template = JINJA_ENVIRONMENT.get_template('/templates/error.html')
-                self.response.write(template.render({'blogkey': blogkey}))
+                self.response.write(template.render({'dir': 'singleblog','key': blogkey}))
         else:
             self.redirect(users.create_login_url('/post/%s' % blogkey))
     
@@ -117,16 +117,41 @@ class Postblog(webapp2.RequestHandler):   #1,check whether login in  2,if login,
         self.redirect('/singleblog/%s' % blogkey)  
 
 class SinglePost(webapp2.RequestHandler):
-    def get(self, key):
-        singlepost = Post.get(key)  
+    def get(self, postkey):
+        singlepost = Post.get(postkey)  #This key is string format, return from post.key() in singleblog.html
         template = JINJA_ENVIRONMENT.get_template('/templates/singlepost.html')
-        self.response.write(template.render({'blogkey':singlepost.parent_key().id(),'post':singlepost}))
+        self.response.write(template.render({'blogkey':singlepost.parent_key().id(),
+                                             'postkey': postkey,
+                                             'post':singlepost}))
 
+class EditPost(webapp2.RequestHandler):
+    def get(self, postkey):
+        user = users.get_current_user()
+        singlepost = Post.get(postkey)
+        parentblog = Blog.get_by_id(int(singlepost.parent_key().id()))
+        if user:
+            if parentblog.ownerid == user.user_id():
+                template = JINJA_ENVIRONMENT.get_template('/templates/editpost.html')
+                self.response.write(template.render({'postkey':postkey, 
+                                                     'pretitle':singlepost.title,
+                                                     'precontent':singlepost.content}))
+            else:
+                template = JINJA_ENVIRONMENT.get_template('/templates/error.html')
+                self.response.write(template.render({'dir': 'singlepost','key': postkey}))
+        else:
+            self.redirect(users.create_login_url('/editpost/%s' % postkey))
+    def post(self, postkey):
+        singlepost = Post.get(postkey)
+        singlepost.title = self.request.get('title')
+        singlepost.content = self.request.get('content')
+        singlepost.put()     #update entity
+        self.redirect('/singlepost/%s' % postkey)
 
 app = webapp2.WSGIApplication([
     ('/', MainPage), 
     ('/createblog', CreateBlog),
     ('/singleblog/(.*)', BlogPage),
     ('/post/(.*)', Postblog), 
-    ('/singlepost/(.*)', SinglePost)
+    ('/singlepost/(.*)', SinglePost),
+    ('/editpost/(.*)', EditPost)
 ], debug=True)

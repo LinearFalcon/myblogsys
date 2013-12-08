@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <body>
+    <h3>Edit Post</h3>
+    
+    <form action="/editpost/{{postkey}}" method="post">
+      <div><input type="text" name="title" value="{{pretitle}}"></div>
+      <div><textarea name="content" rows="3" cols="60" value="{{precontent}}"></textarea></div>
+      <div><input type="submit" value="blogging"></div>
+    </form>
+  </body>
+</html>
+{% endautoescape %}
