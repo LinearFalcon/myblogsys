@@ -15,10 +15,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-#class User(db.Model):
-#    username = db.StringProperty()
-#    password = db.StringProperty()
-
 class Post(db.Model):            #Post Model
     title = db.StringProperty()
     content = db.TextProperty(default = "")
@@ -80,7 +76,17 @@ class BlogPage(webapp2.RequestHandler):  #Only display posts belong to selected 
         posts.ancestor(parentblog)        
         posts.order("-created_time")
 
-        template_values = {'blogkey': blogkey,'posts': posts}   #pass parent blogkey to singleblog page
+        cursor = self.request.get('cursor')
+        if cursor: 
+            posts.with_cursor(start_cursor=cursor)
+        items = posts.fetch(10)
+        if len(items) < 10:      
+            cursor = None     #indicate this is last page
+        else:
+            cursor = posts.cursor()
+
+        #pass parent blogkey to singleblog page
+        template_values = {'blogkey': blogkey,'posts': items, 'cursor': cursor}  
 
         template = JINJA_ENVIRONMENT.get_template('/templates/singleblog.html')
         self.response.write(template.render(template_values))
@@ -104,8 +110,9 @@ class Postblog(webapp2.RequestHandler):   #1,check whether login in  2,if login,
         parentblog = Blog.get_by_id(int(blogkey))
         post = Post(parent=parentblog)           #set this new post's belonging blog
         post.title = self.request.get('title')
-        post.content = self.request.get('content') 
-        post.put()
+        post.content = self.request.get('content')
+        if post.title and post.content:
+            post.put()
 
         self.redirect('/singleblog/%s' % blogkey)  
 

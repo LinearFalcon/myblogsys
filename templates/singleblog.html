@@ -18,6 +18,8 @@
       <hr>
       </div>
     {% endfor %}
-    
     </div>
+    {% if cursor %}
+      <a href="?cursor={{cursor}}">Next Page</a>
+    {% endif %}
 {% endblock %}
