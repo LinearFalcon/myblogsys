@@ -13,7 +13,7 @@
       <h3><a href="/singlepost/{{post.key()}}">{{post.title}}</a></h3>
       <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S GMT")}}</div>
       <div> 
-      <pre>{{post.content}}</pre>
+      <pre class="postcontent">{{post.content|truncate(500)}}</pre>
      
       <hr>
       </div>
