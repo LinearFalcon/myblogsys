@@ -1,3 +1,6 @@
+# Copyright (c) 2013 by LIANG FANG 
+# New York University, Courant Institute, Dept. of Computer Science
+
 import os
 import urllib
 
@@ -8,33 +11,41 @@ import webapp2
 import jinja2
 import re
 import string
+import datetime
 
-
+# Jinja2 Environment Variable
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-class Post(db.Model):            #Post Model
+class Post(db.Model):           
+    """ This is Post Model  """
     title = db.StringProperty()
     content = db.TextProperty(default = "")
-    created_time = db.DateTimeProperty(auto_now_add=True)   #seems not timezone sensitive, wrong time!!!!!!
-    modify_time = db.DateTimeProperty(auto_now=True)  #Whenever post to datastore, it is set to current time
+    created_time = db.DateTimeProperty(auto_now_add=True)   
+    modify_time = db.DateTimeProperty(auto_now=True)  # change to current time automatically when post modified
+    tags = db.ListProperty(db.Key)                    # store keys of this post's tags
+    def tagList(self):                  # return list of tag entities of this post(used in singleblog.html under Jinja2)
+        return [Tag.get(key) for key in self.tags]
 
-class Blog(db.Model):            #Blog Model
+class Tag(db.Model):
+    tag = db.StringProperty()
+
+class Blog(db.Model):            # Blog Model
     name = db.StringProperty()
     description = db.StringProperty()
-    ownerid = db.StringProperty()   #store owner's user_id
+    ownerid = db.StringProperty()   # store owner's user_id
     created_time = db.DateTimeProperty(auto_now_add=True)
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
         blogs = Blog.all()
         blogs.order("-created_time")
-        
-        if users.get_current_user():
+        user = users.get_current_user()
+        if user:
             url = users.create_logout_url('/')
-            url_linktext = 'Logout'
+            url_linktext = user.nickname() + ' -> Logout'
         else:
             url = users.create_login_url('/')
             url_linktext = 'Login'
@@ -60,7 +71,7 @@ class CreateBlog(webapp2.RequestHandler):
         name = self.request.get('name')
         description = self.request.get('description') 
         user = users.get_current_user()
-        ownerid = user.user_id()       #user_id() returns a unique string id for google account user
+        ownerid = user.user_id()       # user_id() returns a unique string id for google account user
         if name and description:              
             blog = Blog(name=name, description=description, ownerid=ownerid)
             blog.put()
@@ -69,7 +80,7 @@ class CreateBlog(webapp2.RequestHandler):
 
         
 
-class BlogPage(webapp2.RequestHandler):  #Only display posts belong to selected blog entity
+class BlogPage(webapp2.RequestHandler):  # Only display posts belong to selected blog entity
     def get(self, blogkey):
         parentblog = Blog.get_by_id(int(blogkey))    
         posts = Post.all()
@@ -81,22 +92,46 @@ class BlogPage(webapp2.RequestHandler):  #Only display posts belong to selected 
             posts.with_cursor(start_cursor=cursor)
         items = posts.fetch(10)
         if len(items) < 10:      
-            cursor = None     #indicate this is last page
+            cursor = None     # indicate this is last page
         else:
             cursor = posts.cursor()
 
-        #pass parent blogkey to singleblog page
-        template_values = {'blogkey': blogkey,'posts': items, 'cursor': cursor}  
+        # pass parent blogkey to singleblog page
+        template_values = {'blogkey': blogkey,'posts': items, 'cursor': cursor}    
 
         template = JINJA_ENVIRONMENT.get_template('/templates/singleblog.html')
         self.response.write(template.render(template_values))
 
+class TagHandler(webapp2.RequestHandler):
+    def get(self, tagkey, blogkey):
+        tag = Tag.get(tagkey)   # get tag entity
+        parentblog = Blog.get_by_id(int(blogkey))
+        posts = Post.all()
+        posts.ancestor(parentblog)
+        posts.filter('tags', tag.key())
+        posts.order("-created_time") 
+ 
+        cursor = self.request.get('cursor')
+        if cursor: 
+            posts.with_cursor(start_cursor=cursor)
+        items = posts.fetch(10)
+        if len(items) < 10:      
+            cursor = None     # indicate this is last page
+        else:
+            cursor = posts.cursor()
 
-class Postblog(webapp2.RequestHandler):   #1,check whether login in  2,if login, post and set post's parent
-    def get(self, blogkey):        #must have get function to render the new html page
+        # pass parent blogkey to singleblog page
+        template_values = {'blogkey': blogkey,'posts': items, 'cursor': cursor}    
+
+        template = JINJA_ENVIRONMENT.get_template('/templates/singleblog.html')
+        self.response.write(template.render(template_values))
+        
+
+class Postblog(webapp2.RequestHandler):  
+    def get(self, blogkey):        # must have get function to render the new html page
         user = users.get_current_user()
         parentblog = Blog.get_by_id(int(blogkey))
-        if user:                                    #need to check if the current user is owner
+        if user:                                    # need to check if the current user is owner
             if parentblog.ownerid == user.user_id():
                 template = JINJA_ENVIRONMENT.get_template('/templates/post.html')
                 self.response.write(template.render({'blogkey': blogkey}))
@@ -106,19 +141,29 @@ class Postblog(webapp2.RequestHandler):   #1,check whether login in  2,if login,
         else:
             self.redirect(users.create_login_url('/post/%s' % blogkey))
     
-    def post(self, blogkey):
+    def post(self, blogkey):           # tag must be separated by comma ','           to be continue
         parentblog = Blog.get_by_id(int(blogkey))
-        post = Post(parent=parentblog)           #set this new post's belonging blog
+        post = Post(parent=parentblog)           # set this new post's belonging blog
         post.title = self.request.get('title')
         post.content = self.request.get('content')
+        tags = self.request.get('tags')
+ #       post.created_time = datetime.datetime.now(pytz.timezone('US/Eastern'))  time need to reset   to be continue
         if post.title and post.content:
+            taglist = tags.split(',')
+            post.tags = []
+            for tagstr in taglist:      # store Tag entity into datastore and they will have key
+                tag = Tag.all().filter('tag =', tagstr).get()
+                if tag == None:         # if this is not None, then the tag is used before
+                    tag = Tag(tag=tagstr)
+                    tag.put()
+                post.tags.append(tag.key())
             post.put()
 
         self.redirect('/singleblog/%s' % blogkey)  
 
 class SinglePost(webapp2.RequestHandler):
     def get(self, postkey):
-        singlepost = Post.get(postkey)  #This key is string format, return from post.key() in singleblog.html
+        singlepost = Post.get(postkey)  # This key is string format, return from post.key() in singleblog.html
         template = JINJA_ENVIRONMENT.get_template('/templates/singlepost.html')
         self.response.write(template.render({'blogkey':singlepost.parent_key().id(),
                                              'postkey': postkey,
@@ -153,5 +198,6 @@ app = webapp2.WSGIApplication([
     ('/singleblog/(.*)', BlogPage),
     ('/post/(.*)', Postblog), 
     ('/singlepost/(.*)', SinglePost),
-    ('/editpost/(.*)', EditPost)
+    ('/editpost/(.*)', EditPost),
+    ('/tag/(.*)/(.*)', TagHandler)
 ], debug=True)

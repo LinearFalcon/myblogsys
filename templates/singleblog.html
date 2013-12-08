@@ -8,18 +8,26 @@
     <a href="/">
     <p>Back_to_Bloglist</p>
     </a>
-    <div id="content" style="background-color:#EEEEEE;float:left;">
-    {% for post in posts %}  
-      <h3><a href="/singlepost/{{post.key()}}">{{post.title}}</a></h3>
-      <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S GMT")}}</div>
-      <div> 
-      <pre class="postcontent">{{post.content|truncate(500)}}</pre>
-     
-      <hr>
-      </div>
-    {% endfor %}
+    <div id="content" style="background-color:#EEEEEE;">
+      {% for post in posts %}  
+        <h3><a href="/singlepost/{{post.key()}}">{{post.title}}</a></h3>
+        <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S GMT")}}</div>
+      
+	<div> 
+	  <pre class="postcontent">{{post.content|truncate(500)}}</pre>
+	</div>
+        
+        <div class="entryFooter">Category:
+        {% for tag in post.tagList() %}
+            <a href="/tag/{{tag.key()}}/{{blogkey}}"><span class="tag">{{tag.tag}}</span></a>
+        {% endfor %}
+	</div>
+     <hr>
+     {% endfor %}
     </div>
-    {% if cursor %}
-      <a href="?cursor={{cursor}}">Next Page</a>
-    {% endif %}
+    <div>
+      {% if cursor %}
+         <a href="?cursor={{cursor}}">Next Page</a>
+      {% endif %}
+    </div>
 {% endblock %}

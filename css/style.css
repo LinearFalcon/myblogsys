@@ -1,9 +1,15 @@
 body {
     text-align: center;
 }
+
 .postcontent {
     clear: both;
     width: 800px;
     word-break: break-word;
     font-size: 15px;
+}
+
+div.entryFooter{
+    margin-top:5px;
+    font-size:small;
 }
