@@ -6,6 +6,7 @@
     
     <form action="/editpost/{{postkey}}" method="post">
       <div><input type="text" name="title" value="{{pretitle}}"></div>
+      <div><input type="text" name="tags" value="{{pretags}}"></div>
       <div><textarea name="content" rows="3" cols="60">{{precontent}}</textarea></div>
       <div><input type="submit" value="Update"></div>
     </form>

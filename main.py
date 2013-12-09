@@ -28,6 +28,8 @@ class Post(db.Model):
     tags = db.ListProperty(db.Key)                    # store keys of this post's tags
     def tagList(self):                  # return list of tag entities of this post(used in singleblog.html under Jinja2)
         return [Tag.get(key) for key in self.tags]
+    def tagStr(self):
+        return " ".join([Tag.get(x).tag for x in self.tags])
 
 class Tag(db.Model):
     tag = db.StringProperty()
@@ -96,8 +98,22 @@ class BlogPage(webapp2.RequestHandler):  # Only display posts belong to selected
         else:
             cursor = posts.cursor()
 
+        tag_list = []
+        for post in posts:
+            for tag in post.tagList():
+                if tag_list:
+                    isTagExist = False
+                    for item in tag_list:
+                        if item.tag == tag.tag:
+                            isTagExist = True
+                            break
+                    if not isTagExist:
+                        tag_list.append(tag)
+                else:
+                    tag_list.append(tag)
+
         # pass parent blogkey to singleblog page
-        template_values = {'blogkey': blogkey,'posts': items, 'cursor': cursor}    
+        template_values = {'blogkey': blogkey,'posts': items, 'cursor': cursor, 'taglist': tag_list}    
 
         template = JINJA_ENVIRONMENT.get_template('/templates/singleblog.html')
         self.response.write(template.render(template_values))
@@ -179,7 +195,8 @@ class EditPost(webapp2.RequestHandler):
                 template = JINJA_ENVIRONMENT.get_template('/templates/editpost.html')
                 self.response.write(template.render({'postkey':postkey, 
                                                      'pretitle':singlepost.title,
-                                                     'precontent':singlepost.content}))
+                                                     'precontent':singlepost.content,
+                                                     'pretags': singlepost.tagStr()}))
             else:
                 template = JINJA_ENVIRONMENT.get_template('/templates/error.html')
                 self.response.write(template.render({'dir': 'singlepost','key': postkey}))
@@ -189,6 +206,15 @@ class EditPost(webapp2.RequestHandler):
         singlepost = Post.get(postkey)
         singlepost.title = self.request.get('title')
         singlepost.content = self.request.get('content')
+        tags = self.request.get('tags')
+        taglist = tags.split(',')
+        singlepost.tags = []
+        for tagstr in taglist:      # store Tag entity into datastore and they will have key
+            tag = Tag.all().filter('tag =', tagstr).get()
+            if tag == None:         # if this is not None, then the tag is used before
+                tag = Tag(tag=tagstr)
+                tag.put()
+            singlepost.tags.append(tag.key())
         singlepost.put()     #update entity
         self.redirect('/singlepost/%s' % postkey)
 
