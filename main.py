@@ -30,6 +30,8 @@ class Post(db.Model):
         return [Tag.get(key) for key in self.tags]
     def tagStr(self):
         return " ".join([Tag.get(x).tag for x in self.tags])
+    def contentFormat(self):
+        return content_filter(self.content)
 
 class Tag(db.Model):
     tag = db.StringProperty()
@@ -38,7 +40,17 @@ class Blog(db.Model):            # Blog Model
     name = db.StringProperty()
     description = db.StringProperty()
     ownerid = db.StringProperty()   # store owner's user_id
+    ownername = db.StringProperty()
     created_time = db.DateTimeProperty(auto_now_add=True)
+
+def content_filter(str): 
+    """ replace links in text content with HTML link or picture """
+#    matchObj = re.match(r'([^"]|^)(https?|ftp)(://[\w:;/.?%#&=+-]+)', str)
+    newstr = re.sub(r'(https?|ftp)(://[\w:;/.?%#&=+-]+)', urlReplacer, str)
+    return newstr
+
+def urlReplacer(match, limit = 45):
+  return '<a href="%s">%s</a>' % (match.group(), match.group()[:limit] + ('...' if len(match.group()) > limit else ''))
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
@@ -74,8 +86,9 @@ class CreateBlog(webapp2.RequestHandler):
         description = self.request.get('description') 
         user = users.get_current_user()
         ownerid = user.user_id()       # user_id() returns a unique string id for google account user
+        ownername = user.nickname()
         if name and description:              
-            blog = Blog(name=name, description=description, ownerid=ownerid)
+            blog = Blog(name=name, description=description, ownerid=ownerid, ownername = ownername)
             blog.put()
 
         self.redirect('/') 

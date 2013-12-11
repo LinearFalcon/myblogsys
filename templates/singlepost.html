@@ -12,5 +12,5 @@
 
   <h3>{{post.title}}</h3>
   <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S EST")}}</div>
-  <div class="postcontent"><pre>{{post.content}}</pre></div>
+  <div class="postcontent">{{post.contentFormat()|safe}}</div>
 {% endblock %}
