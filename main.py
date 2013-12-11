@@ -28,9 +28,9 @@ class Post(db.Model):
     tags = db.ListProperty(db.Key)                    # store keys of this post's tags
     def tagList(self):                  # return list of tag entities of this post(used in singleblog.html under Jinja2)
         return [Tag.get(key) for key in self.tags]
-    def tagStr(self):
+    def tagStr(self):                   # return string of tags, separated by comma
         return " ".join([Tag.get(x).tag for x in self.tags])
-    def contentFormat(self):
+    def contentFormat(self):            # process post content so that http link and pictures can be displayed
         return content_filter(self.content)
 
 class Tag(db.Model):
@@ -44,13 +44,18 @@ class Blog(db.Model):            # Blog Model
     created_time = db.DateTimeProperty(auto_now_add=True)
 
 def content_filter(str): 
-    """ replace links in text content with HTML link or picture """
-#    matchObj = re.match(r'([^"]|^)(https?|ftp)(://[\w:;/.?%#&=+-]+)', str)
-    newstr = re.sub(r'(https?|ftp)(://[\w:;/.?%#&=+-]+)', urlReplacer, str)
-    return newstr
+    """ replace links and picturen links in text content with HTML link or picture """
+    str = re.sub(r'(https?)(://[\w:;/.?%#&=+-]+)(\.(jpg|png|gif))', imageReplacer, str)
+    str = re.sub(r'( https?)(://[\w:;/.?%#&=+-]+)(?!\.jpg)', urlReplacer, str)
+    str = str.replace('\r\n', '\n')
+    str = str.replace('\n','<br />\n')
+    return str
 
-def urlReplacer(match, limit = 45):
+def urlReplacer(match, limit =40):
   return '<a href="%s">%s</a>' % (match.group(), match.group()[:limit] + ('...' if len(match.group()) > limit else ''))
+
+def imageReplacer(match):
+    return '<div><image src="%s" alt="loading image.."></div>' % match.group()
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
@@ -170,7 +175,7 @@ class Postblog(webapp2.RequestHandler):
         else:
             self.redirect(users.create_login_url('/post/%s' % blogkey))
     
-    def post(self, blogkey):           # tag must be separated by comma ','           to be continue
+    def post(self, blogkey):           # tag must be separated by comma ','           
         parentblog = Blog.get_by_id(int(blogkey))
         post = Post(parent=parentblog)           # set this new post's belonging blog
         post.title = self.request.get('title')
