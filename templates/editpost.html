@@ -5,9 +5,15 @@
     <h3>Edit Post</h3>
     
     <form action="/editpost/{{postkey}}" method="post">
+      <h2>Title</h2>
       <div><input type="text" name="title" value="{{pretitle}}"></div>
+      <h2>Tags</h2>
       <div><input type="text" name="tags" value="{{pretags}}"></div>
+      <h2>Content</h2>
       <div><textarea name="content" rows="3" cols="60">{{precontent}}</textarea></div>
+      <h2>Image</h2>
+      <div><a href="/upload/{{postkey}}" target="_blank">Upload Image</a></div>
+      <hr>
       <div><input type="submit" value="Update"></div>
     </form>
   </body>

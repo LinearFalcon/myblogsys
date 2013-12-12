@@ -5,6 +5,7 @@ import os
 import urllib
 
 from google.appengine.api import users
+from google.appengine.api import memcache
 from google.appengine.ext import db
 
 import webapp2
@@ -13,7 +14,7 @@ import re
 import string
 import datetime
 
-# Jinja2 Environment Variable
+""" Jinja2 Environment Variable """
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
@@ -43,12 +44,19 @@ class Blog(db.Model):            # Blog Model
     ownername = db.StringProperty()
     created_time = db.DateTimeProperty(auto_now_add=True)
 
+class Image(db.Model):
+    """ Image Model, several Image instance can belong to one Post instance """
+    image = db.BlobProperty()
+    post = db.ReferenceProperty(Post, collection_name = 'images')
+    contentType = db.StringProperty()
+
 def content_filter(str): 
     """ replace links and picturen links in text content with HTML link or picture """
     str = re.sub(r'(https?)(://[\w:;/.?%#&=+-]+)(\.(jpg|png|gif))', imageReplacer, str)
     str = re.sub(r'( https?)(://[\w:;/.?%#&=+-]+)(?!\.jpg)', urlReplacer, str)
     str = str.replace('\r\n', '\n')
     str = str.replace('\n','<br />\n')
+    str = replaceImages(str)
     return str
 
 def urlReplacer(match, limit =40):
@@ -56,6 +64,9 @@ def urlReplacer(match, limit =40):
 
 def imageReplacer(match):
     return '<div><image src="%s" alt="loading image.."></div>' % match.group()
+
+def replaceImages(str):
+  return re.sub(r'\[img:(.*)\]', r'<img src="/image/\1" style="max-width:400px">', str)
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
@@ -195,6 +206,35 @@ class Postblog(webapp2.RequestHandler):
 
         self.redirect('/singleblog/%s' % blogkey)  
 
+class UploadHandler(webapp2.RequestHandler):
+    """ Create Image instance and upload images """
+    def get(self, postkey):
+        template = JINJA_ENVIRONMENT.get_template('/templates/upload.html')
+        self.response.write(template.render({'postkey':postkey,
+                                             'images': Post.get(postkey).images})) # using Image's reference property
+    def post(self, postkey):
+        if self.request.get('file'):
+            image = Image()
+            image.image = self.request.POST.get('file').file.read()
+            image.contentType = self.request.body_file.vars['file'].headers['content-type']
+            image.post = Post.get(postkey)
+            image.put()
+
+        self.redirect('/upload/' + postkey) # ?????????????
+
+class ImageHandler(webapp2.RequestHandler):
+  def get(self, imagekey):
+    image = getImage(imagekey)
+    self.response.headers['Content-Type'] = image.contentType.encode('utf-8')
+    self.response.out.write(image.image)
+
+def getImage(key):
+  data = memcache.get(key)
+  if data == None:
+    data = db.get(key)
+    memcache.set(key = key, value = data, time=3600)
+  return data
+
 class SinglePost(webapp2.RequestHandler):
     def get(self, postkey):
         singlepost = Post.get(postkey)  # This key is string format, return from post.key() in singleblog.html
@@ -233,6 +273,11 @@ class EditPost(webapp2.RequestHandler):
                 tag = Tag(tag=tagstr)
                 tag.put()
             singlepost.tags.append(tag.key())
+        
+        if singlepost.images:
+            for item in singlepost.images:
+                singlepost.content = singlepost.content + '\n' + '[img:%s]' % item.key() + '\n'
+            
         singlepost.put()     #update entity
         self.redirect('/singlepost/%s' % postkey)
 
@@ -243,5 +288,7 @@ app = webapp2.WSGIApplication([
     ('/post/(.*)', Postblog), 
     ('/singlepost/(.*)', SinglePost),
     ('/editpost/(.*)', EditPost),
-    ('/tag/(.*)/(.*)', TagHandler)
+    ('/tag/(.*)/(.*)', TagHandler),
+    ('/upload/(.*)', UploadHandler),
+    ('/image/(.*)', ImageHandler)
 ], debug=True)

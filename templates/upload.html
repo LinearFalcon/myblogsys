@@ -1,0 +1,18 @@
+{% extends "templates/index.html" %}
+
+{% block contents %}
+  <h1>Upload Image</h1>
+  {% for image in images %}
+  <h2><img src="/image/{{image.key()}}"/>
+    <br>
+    <input type="text" value="[img:{{image.key()}}]" style="width:300px;font-size:x-small"/>
+
+  </h2>
+  {% endfor %}
+  <h2>
+    <form action="/upload/{{postkey}}" enctype="multipart/form-data" method="post">
+      <input type="file" name="file">
+      <input type="submit" value="Upload">
+    </form>
+  </h2>
+{% endblock %}

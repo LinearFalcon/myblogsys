@@ -5,9 +5,12 @@
     <h3>Post Blog</h3>
     
     <form action="/post/{{blogkey}}" method="post">
+      <h2>Title</h2>
       <div><input type="text" name="title"></div>
+      <h2>Tags</h2>
       <div><input type="text" name="tags"></div>
-      <div><textarea name="content" rows="3" cols="60"></textarea></div>
+      <h2>Content</h2>
+      <div><textarea name="content" rows="30" cols="150"></textarea></div>
       <div><input type="submit" value="blogging"></div>
     </form>
   </body>
