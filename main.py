@@ -205,9 +205,9 @@ class Postblog(webapp2.RequestHandler):
             post.put()
 
         self.redirect('/singleblog/%s' % blogkey)  
-
+"""
 class UploadHandler(webapp2.RequestHandler):
-    """ Create Image instance and upload images """
+    # Create Image instance and upload images 
     def get(self, postkey):
         template = JINJA_ENVIRONMENT.get_template('/templates/upload.html')
         self.response.write(template.render({'postkey':postkey,
@@ -221,7 +221,7 @@ class UploadHandler(webapp2.RequestHandler):
             image.put()
 
         self.redirect('/upload/' + postkey) # ?????????????
-
+"""
 class ImageHandler(webapp2.RequestHandler):
   def get(self, imagekey):
     image = getImage(imagekey)
@@ -243,7 +243,7 @@ class SinglePost(webapp2.RequestHandler):
                                              'postkey': postkey,
                                              'post':singlepost}))
 
-class EditPost(webapp2.RequestHandler):
+class EditPost(webapp2.RequestHandler):           # Only when edit post can user add images!!!!!!!!!!!!!!!!!!!!!!!!!!!
     def get(self, postkey):
         user = users.get_current_user()
         singlepost = Post.get(postkey)
@@ -254,7 +254,8 @@ class EditPost(webapp2.RequestHandler):
                 self.response.write(template.render({'postkey':postkey, 
                                                      'pretitle':singlepost.title,
                                                      'precontent':singlepost.content,
-                                                     'pretags': singlepost.tagStr()}))
+                                                     'pretags': singlepost.tagStr(),
+                                                     'images': singlepost.images}))
             else:
                 template = JINJA_ENVIRONMENT.get_template('/templates/error.html')
                 self.response.write(template.render({'dir': 'singlepost','key': postkey}))
@@ -274,9 +275,13 @@ class EditPost(webapp2.RequestHandler):
                 tag.put()
             singlepost.tags.append(tag.key())
         
-        if singlepost.images:
-            for item in singlepost.images:
-                singlepost.content = singlepost.content + '\n' + '[img:%s]' % item.key() + '\n'
+        if self.request.get('file'):
+            image = Image()
+            image.image = self.request.POST.get('file').file.read()
+            image.contentType = self.request.body_file.vars['file'].headers['content-type']
+            image.post = singlepost
+            image.put()
+            singlepost.content = singlepost.content + '\n' + '[img:%s]' % image.key() + '\n'
             
         singlepost.put()     #update entity
         self.redirect('/singlepost/%s' % postkey)
@@ -289,6 +294,6 @@ app = webapp2.WSGIApplication([
     ('/singlepost/(.*)', SinglePost),
     ('/editpost/(.*)', EditPost),
     ('/tag/(.*)/(.*)', TagHandler),
-    ('/upload/(.*)', UploadHandler),
+#    ('/upload/(.*)', UploadHandler),
     ('/image/(.*)', ImageHandler)
 ], debug=True)

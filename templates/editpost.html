@@ -4,7 +4,7 @@
   <body>
     <h3>Edit Post</h3>
     
-    <form action="/editpost/{{postkey}}" method="post">
+    <form action="/editpost/{{postkey}}" enctype="multipart/form-data" method="post">
       <h2>Title</h2>
       <div><input type="text" name="title" value="{{pretitle}}"></div>
       <h2>Tags</h2>
@@ -12,7 +12,15 @@
       <h2>Content</h2>
       <div><textarea name="content" rows="3" cols="60">{{precontent}}</textarea></div>
       <h2>Image</h2>
-      <div><a href="/upload/{{postkey}}" target="_blank">Upload Image</a></div>
+      {% for image in images %}
+      <h2><img src="/image/{{image.key()}}"/>
+	<br>
+	<input type="text" value="[img:{{image.key()}}]" style="width:300px;font-size:x-small"/>
+      </h2>
+      {% endfor %}
+      <h2>
+	<div><input type="file" name="file"></div>
+      </h2>
       <hr>
       <div><input type="submit" value="Update"></div>
     </form>
