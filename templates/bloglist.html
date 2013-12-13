@@ -11,7 +11,7 @@
     <div id="content" style="background-color:#EEEEEE;float:left;">
     {% for blog in blogs %}  
       <h3><a href="/singleblog/{{blog.key().id()}}">{{blog.name}}</a></h3>
-      <div>{{blog.created_time.strftime("%d %b %Y %H:%M:%S GMT")}}</div>
+      <div>{{blog.created_time.strftime("%d %b %Y %H:%M:%S EST")}}</div>
       <div> 
       <pre>{{blog.description}}</pre>
      

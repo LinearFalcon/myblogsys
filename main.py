@@ -53,6 +53,11 @@ class Image(db.Model):
     post = db.ReferenceProperty(Post, collection_name = 'images')
     contentType = db.StringProperty()
 
+class Comment(db.Model):
+    comment = db.TextProperty(default = "")
+    post = db.ReferenceProperty(Post, collection_name = 'comments')
+    author = db.TextProperty()
+
 def content_filter(str): 
     """ replace links and picturen links in text content with HTML link or picture """
     str = re.sub(r'(https?)(://[\w:;/.?%#&=+-]+)(\.(jpg|png|gif))', imageReplacer, str)
@@ -113,6 +118,7 @@ class CreateBlog(webapp2.RequestHandler):
         ownername = user.nickname()
         if name and description:              
             blog = Blog(name=name, description=description, ownerid=ownerid, ownername = ownername)
+            blog.created_time = blog.created_time + datetime.timedelta(hours=-5)
             blog.put()
 
         self.redirect('/') 
@@ -201,8 +207,8 @@ class Postblog(webapp2.RequestHandler):
         post = Post(parent=parentblog)           # set this new post's belonging blog
         post.title = self.request.get('title')
         post.content = self.request.get('content')
+        post.created_time = post.created_time + datetime.timedelta(hours=-5)
         tags = self.request.get('tags')
- #       post.created_time = datetime.datetime.now(pytz.timezone('US/Eastern'))  time need to reset   to be continue
         if post.title and post.content:
             taglist = tags.split(',')
             post.tags = []
@@ -216,7 +222,7 @@ class Postblog(webapp2.RequestHandler):
 
         self.redirect('/singleblog/%s' % blogkey)  
 
-class SinglePost(webapp2.RequestHandler):
+class SinglePost(webapp2.RequestHandler):        # may need to pass Post instance to singlepost.html!!!!!!!!!!!!!!
     """ Display single post """
     def get(self, postkey):
         singlepost = Post.get(postkey)  # This key is string format, return from post.key() in singleblog.html
@@ -279,6 +285,16 @@ class RssHandler(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('/templates/rss.xml')
         self.response.write(template.render({'posts': posts}))
 
+class CommentHandler(webapp2.RequestHandler):
+    def post(self, postkey):
+        if self.request.get("comment") != '':
+            comment = Comment()
+            comment.comment = self.request.get('comment')
+            comment.author = self.request.get('author')
+            comment.post = Post.get(postkey)
+            comment.put()
+        self.redirect('/singlepost/%s' % postkey)
+
 class ImageHandler(webapp2.RequestHandler):
     def get(self, imagekey):
         image = getImage(imagekey)
@@ -301,5 +317,6 @@ app = webapp2.WSGIApplication([
     ('/editpost/(.*)', EditPost),
     ('/tag/(.*)/(.*)', TagHandler),
     ('/rss/(.*)', RssHandler),
-    ('/image/(.*)', ImageHandler)
+    ('/image/(.*)', ImageHandler),
+    ('/comment/(.*)', CommentHandler)
 ], debug=True)
