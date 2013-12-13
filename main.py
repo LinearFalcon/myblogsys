@@ -14,14 +14,15 @@ import re
 import string
 import datetime
 
-""" Jinja2 Environment Variable """
+### Jinja2 Environment Variable ###
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
 
-""" Model Class """
+### Model Class and helper functions ###
 
 class Post(db.Model):           
     """ This is Post Model  """
@@ -78,7 +79,7 @@ def displayImages(str):
     return re.sub(r'\[img:(.*)\]', r'<img src="/image/\1" style="max-width:400px">', str)
 
 
-""" Function Class """
+### Function Class ###
 
 class MainPage(webapp2.RequestHandler):
     """ List all blogs info on single page """
@@ -211,7 +212,7 @@ class Postblog(webapp2.RequestHandler):
         post.created_time = post.created_time + datetime.timedelta(hours=-5)
         tags = self.request.get('tags')
         if post.title and post.content:
-            taglist = tags.split(',')
+            taglist = re.split('[,; ]+', tags)
             post.tags = []
             for tagstr in taglist:      # store Tag entity into datastore and they will have key
                 tag = Tag.all().filter('tag =', tagstr).get()
@@ -223,7 +224,7 @@ class Postblog(webapp2.RequestHandler):
 
         self.redirect('/singleblog/%s' % blogkey)  
 
-class SinglePost(webapp2.RequestHandler):        # may need to pass Post instance to singlepost.html!!!!!!!!!!!!!!
+class SinglePost(webapp2.RequestHandler):   
     """ Display single post """
     def get(self, postkey):
         singlepost = Post.get(postkey)  # This key is string format, return from post.key() in singleblog.html
@@ -232,7 +233,7 @@ class SinglePost(webapp2.RequestHandler):        # may need to pass Post instanc
                                              'postkey': postkey,
                                              'post':singlepost}))
 
-class EditPost(webapp2.RequestHandler):           # Only when edit post can user add images!!!!!!!!!!!!!!!!!!!!!!!!!!!
+class EditPost(webapp2.RequestHandler):     # Only when edit post that is already exsiting can user add images
     """ Edit Post, content will be prefilled by previous one """
     def get(self, postkey):
         user = users.get_current_user()
@@ -256,7 +257,7 @@ class EditPost(webapp2.RequestHandler):           # Only when edit post can user
         singlepost.title = self.request.get('title')
         singlepost.content = self.request.get('content')
         tags = self.request.get('tags')
-        taglist = tags.split(',')
+        taglist = re.split('[,; ]+', tags)
         singlepost.tags = []
         for tagstr in taglist:      # store Tag entity into datastore and they will have key
             tag = Tag.all().filter('tag =', tagstr).get()
