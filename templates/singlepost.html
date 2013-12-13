@@ -1,7 +1,9 @@
 {% extends "templates/index.html" %}
 
 {% block contents %}
+  <div class="wrapper">
   <h1>MyPost</h1>
+  <div class="menu">
   <a href="/singleblog/{{blogkey}}">
     <p>Back_to_BlogPage</p>
   </a>
@@ -9,23 +11,28 @@
   <a href="/editpost/{{postkey}}">
     <p>Edit this post/Add images</p>
   </a>
+  </div>
 
   <h3>{{post.title}}</h3>
   <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S EST")}}</div>
-  <div class="postcontent">{{post.contentFormat()|safe}}</div>
+  <div class="body">{{post.contentFormat()|safe}}</div>
   <hr>
-  <b>Comments:</b>
-  {% for comment in post.comments %}
-    <div> {{comment.author}}: </div>
-    <div> {{comment.comment}} </div>
-    <hr>
+  <div class="commenttext"><b>Comments Area:</b></div>
+
+  {% for comment in post.comments.order("-created_time") %}
+    <div class="comment">
+    <p> From {{comment.author}}: </p>
+    <p> {{comment.comment}} </p>
+    </div>
   {% endfor %}
-  <b>Post Comments:</b>
+
+  <hr>
   <form action="/comment/{{postkey}}" method="post" style="padding:0">
-    <h2>author</h2>
-    <p><input type="text" name="author" style="width:80px;"> </p>
-    <h2>comment</h2>
-    <p><input type="text" name="comment" style="width:280px;height:100px;"></p>
-    <input type="submit" value="Submit" style="width:50px">
+    <div class="commenttext">author</div>
+    <div class="input"><input type="text" name="author" style="width:80px;"> </div>
+    <div class="commenttext">comment</div>
+    <div class="input"><textarea name="comment" rows="10" cols="50"></textarea></div>
+    <div class="input"><input type="submit" value="Submit" style="width:50px;"></div>
   </form>
+  </div>
 {% endblock %}

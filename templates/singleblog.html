@@ -8,7 +8,9 @@
 
   </head>
   <body>
+    <div class="wrapper">
     <h1>MyBlog</h1>
+    <div class="menu">
     <a href="/rss/{{blogkey}}">
       RSS
     </a>
@@ -18,29 +20,31 @@
     <a href="/">
     <p>Back_to_Bloglist</p>
     </a>
+    </div>
     <div>All Tags:
       {% for tag in taglist %}
         <a href="/tag/{{tag.key()}}/{{blogkey}}"><span class="tag">{{tag.tag}}</span></a>
       {% endfor %}
     </div>  
-   
-    <div id="content" style="background-color:#EEEEEE;">
-      {% for post in posts %}  
-        <h3><a href="/singlepost/{{post.key()}}">{{post.title}}</a></h3>
-        <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S GMT")}}</div>
-      
-	<div> 
+    </div>
+    {% for post in posts %}
+    <div class="block">
+        <div class="postHeader">
+          <h3><a href="/singlepost/{{post.key()}}">{{post.title}}</a></h3>
+          <div class="postDate">{{post.created_time.strftime("%d %b %Y %H:%M:%S EST")}}</div>
+	</div>
+	<div class="body"> 
 	  {{post.content|truncate(500)}}
 	</div>
         
-        <div class="entryFooter">Category:
+        <div class="postFooter"> Tags:
         {% for tag in post.tagList() %}
             <a href="/tag/{{tag.key()}}/{{blogkey}}"><span class="tag">{{tag.tag}}</span></a>
         {% endfor %}
 	</div>
-     <hr>
-     {% endfor %}
-    </div>
+   </div>
+   {% endfor %}
+   
     <div>
       {% if cursor %}
          <a href="?cursor={{cursor}}">Next Page</a>

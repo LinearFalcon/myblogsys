@@ -1,23 +1,28 @@
 {% extends "templates/index.html"  %}
 
 {% block contents %}
+    <div class="wrapper">
     <h1>Blog Platform</h1>
+    <div class="menu">
     <p>
      <a href = "{{ url|safe }}">{{ url_linktext }}</a>
     </p>
     <a href="/createblog">
     <p>CreateBlog</p>
     </a>
-    <div id="content" style="background-color:#EEEEEE;float:left;">
+    </div>
+    </div>
+    <div class="content">
+    
     {% for blog in blogs %}  
+    <div class="block">
       <h3><a href="/singleblog/{{blog.key().id()}}">{{blog.name}}</a></h3>
       <div>{{blog.created_time.strftime("%d %b %Y %H:%M:%S EST")}}</div>
       <div> 
       <pre>{{blog.description}}</pre>
-     
       </div>
       <div>by {{blog.ownername}} </div>
-    <hr>
+    </div>
     {% endfor %}
     </div>
 {% endblock %}

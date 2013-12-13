@@ -57,6 +57,7 @@ class Comment(db.Model):
     comment = db.TextProperty(default = "")
     post = db.ReferenceProperty(Post, collection_name = 'comments')
     author = db.TextProperty()
+    created_time = db.DateTimeProperty(auto_now_add=True)
 
 def content_filter(str): 
     """ replace links and picturen links in text content with HTML link or picture """

@@ -2,28 +2,30 @@
 {% autoescape true %}
 <html>
   <body>
-    <h3>Edit Post</h3>
-    
+    <h2>Edit Post</h2>
+
     <form action="/editpost/{{postkey}}" enctype="multipart/form-data" method="post">
-      <h2>Title</h2>
-      <div><input type="text" name="title" value="{{pretitle}}"></div>
-      <h2>Tags</h2>
-      <div><input type="text" name="tags" value="{{pretags}}"></div>
-      <h2>Content</h2>
-      <div><textarea name="content" rows="3" cols="60">{{precontent}}</textarea></div>
-      <h2>Image</h2>
+      <p>Title</p>
+      <p><input type="text" name="title" value="{{pretitle}}"></p>
+      
+      <h3>Tags</h3>
+      <p><input type="text" name="tags" value="{{pretags}}"></p>
+      <h3>Content</h3>
+      <p><textarea name="content" rows="20" cols="100">{{precontent}}</textarea></p>
+      <h3>Image</h3>
       {% for image in images %}
-      <h2><img src="/image/{{image.key()}}"/>
+      <h3><img src="/image/{{image.key()}}"/>
 	<br>
 	<input type="text" value="[img:{{image.key()}}]" style="width:300px;font-size:x-small"/>
-      </h2>
+      </h3>
       {% endfor %}
-      <h2>
-	<div><input type="file" name="file"></div>
-      </h2>
+      <h3>
+	<input type="file" name="file">
+      </h3>
       <hr>
-      <div><input type="submit" value="Update"></div>
+      <input type="submit" value="Update" style="font-size:20px">
     </form>
+
   </body>
 </html>
 {% endautoescape %}
