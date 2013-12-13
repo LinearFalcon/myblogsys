@@ -63,7 +63,7 @@ class Comment(db.Model):
 def content_filter(str): 
     """ replace links and picturen links in text content with HTML link or picture """
     str = re.sub(r'(https?)(://[\w:;/.?%#&=+-]+)(\.(jpg|png|gif))', imageReplacer, str)
-    str = re.sub(r'( https?)(://[\w:;/.?%#&=+-]+)(?!\.jpg)', urlReplacer, str)
+    str = re.sub(r'(?<!")(https?)(://[\w:;/.?%#&=+-]+)', urlReplacer, str)
     str = str.replace('\r\n', '\n')
     str = str.replace('\n','<br />\n')
     str = displayImages(str)
