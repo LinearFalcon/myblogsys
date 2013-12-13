@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<rss version="2.0">
+<channel>
+  <title>MyBlogSys</title>
+  <link>http://myblogsys.appspot.com</link>
+  <description>These are feed of MyBlogSys</description>
+  {% for post in posts %}
+  <item>
+      <title>{{post.title}}</title>
+      <link>http://myblogsys.appspot.com/singlepost/{{post.key()}}</link>
+      <description>{{post.content}}</description>
+  </item>
+  {% endfor %}
+</channel>
+</rss> 

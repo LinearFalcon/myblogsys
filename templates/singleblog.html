@@ -1,14 +1,23 @@
-{% extends "templates/index.html"  %}
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head>
+    <link rel="alternate" type="application/rss+xml" href="/rss/{{blogkey}}" title="RSS">
+    <title>OST Blog</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css"/> 
 
-{% block contents %}
+  </head>
+  <body>
     <h1>MyBlog</h1>
+    <a href="/rss/{{blogkey}}">
+      RSS
+    </a>
     <p>
      <a href = "/post/{{blogkey}}">Post</a>
     </p>
     <a href="/">
     <p>Back_to_Bloglist</p>
     </a>
-    
     <div>All Tags:
       {% for tag in taglist %}
         <a href="/tag/{{tag.key()}}/{{blogkey}}"><span class="tag">{{tag.tag}}</span></a>
@@ -37,4 +46,6 @@
          <a href="?cursor={{cursor}}">Next Page</a>
       {% endif %}
     </div>
-{% endblock %}
+  </body>
+</html>
+{% endautoescape %}

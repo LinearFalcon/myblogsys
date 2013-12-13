@@ -20,6 +20,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
+
+""" Model Class """
+
 class Post(db.Model):           
     """ This is Post Model  """
     title = db.StringProperty()
@@ -56,19 +59,23 @@ def content_filter(str):
     str = re.sub(r'( https?)(://[\w:;/.?%#&=+-]+)(?!\.jpg)', urlReplacer, str)
     str = str.replace('\r\n', '\n')
     str = str.replace('\n','<br />\n')
-    str = replaceImages(str)
+    str = displayImages(str)
     return str
 
 def urlReplacer(match, limit =40):
-  return '<a href="%s">%s</a>' % (match.group(), match.group()[:limit] + ('...' if len(match.group()) > limit else ''))
+    return '<a href="%s">%s</a>' % (match.group(), match.group()[:limit] + ('...' if len(match.group()) > limit else ''))
 
 def imageReplacer(match):
     return '<div><image src="%s" alt="loading image.."></div>' % match.group()
 
-def replaceImages(str):
-  return re.sub(r'\[img:(.*)\]', r'<img src="/image/\1" style="max-width:400px">', str)
+def displayImages(str):
+    return re.sub(r'\[img:(.*)\]', r'<img src="/image/\1" style="max-width:400px">', str)
+
+
+""" Function Class """
 
 class MainPage(webapp2.RequestHandler):
+    """ List all blogs info on single page """
     def get(self):
         blogs = Blog.all()
         blogs.order("-created_time")
@@ -89,6 +96,7 @@ class MainPage(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
 class CreateBlog(webapp2.RequestHandler):
+    """ Create Blog """
     def get(self):        
         user = users.get_current_user()
         if user:
@@ -111,7 +119,8 @@ class CreateBlog(webapp2.RequestHandler):
 
         
 
-class BlogPage(webapp2.RequestHandler):  # Only display posts belong to selected blog entity
+class BlogPage(webapp2.RequestHandler):  
+    """ Only display posts belong to selected blog entity """
     def get(self, blogkey):
         parentblog = Blog.get_by_id(int(blogkey))    
         posts = Post.all()
@@ -173,6 +182,7 @@ class TagHandler(webapp2.RequestHandler):
         
 
 class Postblog(webapp2.RequestHandler):  
+    """ Post a new post on a Blog """
     def get(self, blogkey):        # must have get function to render the new html page
         user = users.get_current_user()
         parentblog = Blog.get_by_id(int(blogkey))
@@ -205,37 +215,9 @@ class Postblog(webapp2.RequestHandler):
             post.put()
 
         self.redirect('/singleblog/%s' % blogkey)  
-"""
-class UploadHandler(webapp2.RequestHandler):
-    # Create Image instance and upload images 
-    def get(self, postkey):
-        template = JINJA_ENVIRONMENT.get_template('/templates/upload.html')
-        self.response.write(template.render({'postkey':postkey,
-                                             'images': Post.get(postkey).images})) # using Image's reference property
-    def post(self, postkey):
-        if self.request.get('file'):
-            image = Image()
-            image.image = self.request.POST.get('file').file.read()
-            image.contentType = self.request.body_file.vars['file'].headers['content-type']
-            image.post = Post.get(postkey)
-            image.put()
-
-        self.redirect('/upload/' + postkey) # ?????????????
-"""
-class ImageHandler(webapp2.RequestHandler):
-  def get(self, imagekey):
-    image = getImage(imagekey)
-    self.response.headers['Content-Type'] = image.contentType.encode('utf-8')
-    self.response.out.write(image.image)
-
-def getImage(key):
-  data = memcache.get(key)
-  if data == None:
-    data = db.get(key)
-    memcache.set(key = key, value = data, time=3600)
-  return data
 
 class SinglePost(webapp2.RequestHandler):
+    """ Display single post """
     def get(self, postkey):
         singlepost = Post.get(postkey)  # This key is string format, return from post.key() in singleblog.html
         template = JINJA_ENVIRONMENT.get_template('/templates/singlepost.html')
@@ -244,6 +226,7 @@ class SinglePost(webapp2.RequestHandler):
                                              'post':singlepost}))
 
 class EditPost(webapp2.RequestHandler):           # Only when edit post can user add images!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    """ Edit Post, content will be prefilled by previous one """
     def get(self, postkey):
         user = users.get_current_user()
         singlepost = Post.get(postkey)
@@ -286,6 +269,29 @@ class EditPost(webapp2.RequestHandler):           # Only when edit post can user
         singlepost.put()     #update entity
         self.redirect('/singlepost/%s' % postkey)
 
+class RssHandler(webapp2.RequestHandler):
+    """ Generate RSS for a single blog """
+    def get(self, blogkey):
+        parentblog = Blog.get_by_id(int(blogkey))    
+        posts = Post.all()
+        posts.ancestor(parentblog)        
+        posts.order("-created_time")
+        template = JINJA_ENVIRONMENT.get_template('/templates/rss.xml')
+        self.response.write(template.render({'posts': posts}))
+
+class ImageHandler(webapp2.RequestHandler):
+    def get(self, imagekey):
+        image = getImage(imagekey)
+        self.response.headers['Content-Type'] = image.contentType.encode('utf-8')
+        self.response.out.write(image.image)
+
+def getImage(key):
+    data = memcache.get(key)
+    if data == None:
+        data = db.get(key)
+        memcache.set(key = key, value = data, time=3600)
+    return data
+
 app = webapp2.WSGIApplication([
     ('/', MainPage), 
     ('/createblog', CreateBlog),
@@ -294,6 +300,6 @@ app = webapp2.WSGIApplication([
     ('/singlepost/(.*)', SinglePost),
     ('/editpost/(.*)', EditPost),
     ('/tag/(.*)/(.*)', TagHandler),
-#    ('/upload/(.*)', UploadHandler),
+    ('/rss/(.*)', RssHandler),
     ('/image/(.*)', ImageHandler)
 ], debug=True)
