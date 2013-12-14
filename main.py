@@ -37,6 +37,8 @@ class Post(db.Model):
         return " ".join([Tag.get(x).tag for x in self.tags])
     def contentFormat(self):            # process post content so that http link and pictures can be displayed
         return content_filter(self.content)
+    def modifytimeinEST(self):
+        return self.modify_time + datetime.timedelta(hours=-5)
 
 class Tag(db.Model):
     tag = db.StringProperty()
@@ -79,7 +81,7 @@ def displayImages(str):
     return re.sub(r'\[img:(.*)\]', r'<img src="/image/\1" style="max-width:400px">', str)
 
 
-### Function Class ###
+### Handler Function Class ###
 
 class MainPage(webapp2.RequestHandler):
     """ List all blogs info on single page """
@@ -135,15 +137,6 @@ class BlogPage(webapp2.RequestHandler):
         posts.ancestor(parentblog)        
         posts.order("-created_time")
 
-        cursor = self.request.get('cursor')
-        if cursor: 
-            posts.with_cursor(start_cursor=cursor)
-        items = posts.fetch(10)
-        if len(items) < 10:      
-            cursor = None     # indicate this is last page
-        else:
-            cursor = posts.cursor()
-
         tag_list = []
         for post in posts:
             for tag in post.tagList():
@@ -157,6 +150,15 @@ class BlogPage(webapp2.RequestHandler):
                         tag_list.append(tag)
                 else:
                     tag_list.append(tag)
+
+        cursor = self.request.get('cursor')
+        if cursor: 
+            posts.with_cursor(start_cursor=cursor)
+        items = posts.fetch(10)
+        if len(items) < 10:      
+            cursor = None     # indicate this is last page
+        else:
+            cursor = posts.cursor()
 
         # pass parent blogkey to singleblog page
         template_values = {'blogkey': blogkey,'posts': items, 'cursor': cursor, 'taglist': tag_list}    
@@ -210,6 +212,7 @@ class Postblog(webapp2.RequestHandler):
         post.title = self.request.get('title')
         post.content = self.request.get('content')
         post.created_time = post.created_time + datetime.timedelta(hours=-5)
+        post.modify_time = post.modify_time + datetime.timedelta(hours=-5)
         tags = self.request.get('tags')
         if post.title and post.content:
             taglist = re.split('[,; ]+', tags)

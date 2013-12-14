@@ -2,13 +2,17 @@
 {% autoescape true %}
 <html>
   <body>
-    <h3>Create Blog</h3>
-    
+
+    <h2>Create Blog</h2>
+  
     <form action="/createblog" method="post">
+      <h3>Blog Name:</h3>
       <div><input type="text" name="name"></div>
-      <div><textarea name="description" rows="3" cols="60"></textarea></div>
+      <h3>Description:</h3>
+      <div><textarea name="description" rows="5" cols="60"></textarea></div>
       <div><input type="submit" value="create"></div>
     </form>
+
   </body>
 </html>
 {% endautoescape %}

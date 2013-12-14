@@ -2,6 +2,12 @@ body {
     text-align: center;
 }
 
+.intro {
+  background-image: url("https://g2.twimg.com/blog/system/files/styles/hero_1600w_300h/public/Header_Company.jpg");
+  background-repeat: no-repeat;
+  background-position: top center;
+}
+
 div.edit {
     border-style: solid;
     padding:20px;
@@ -88,7 +94,6 @@ h1{
 }
 h2{
     padding:5px 0 5px 5px;
-    border-left:#009900 8px solid;
     border-bottom:#009900 1px solid;
     font-size: 150%;
     font-weight: bold;
@@ -103,4 +108,8 @@ h3{
     font-size: 170%;
     color:#333;
     margin-bottom:0;
+}
+h3#page-title {
+        font-size: 300%;
+	color:#FFFFFF;
 }

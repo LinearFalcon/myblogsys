@@ -2,7 +2,11 @@
 
 {% block contents %}
   <div class="wrapper">
-  <h1>MyPost</h1>
+  <div class="intro">
+      <h3 id="page-title">
+	<p>OST Blogging Platform - SinglePost Page</p>
+      </h3>
+    </div>
   <div class="menu">
   <a href="/singleblog/{{blogkey}}">
     <p>Back_to_BlogPage</p>
@@ -14,7 +18,8 @@
   </div>
 
   <h3>{{post.title}}</h3>
-  <div>{{post.created_time.strftime("%d %b %Y %H:%M:%S EST")}}</div>
+  <div>created on:{{post.created_time.strftime("%d %b %Y %H:%M:%S EST")}}</div>
+    <div>modified on:{{post.modifytimeinEST().strftime("%d %b %Y %H:%M:%S EST")}}</div>
   <div class="body">{{post.contentFormat()|safe}}</div>
   <hr>
   <div class="commenttext"><b>Comments Area:</b></div>
