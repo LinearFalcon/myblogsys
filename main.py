@@ -280,15 +280,15 @@ class EditPost(webapp2.RequestHandler):     # Only when edit post that is alread
         singlepost.put()     #update entity
         self.redirect('/singlepost/%s' % postkey)
 
-class RssHandler(webapp2.RequestHandler):
+#class RssHandler(webapp2.RequestHandler):
     """ Generate RSS for a single blog """
-    def get(self, blogkey):
-        parentblog = Blog.get_by_id(int(blogkey))    
-        posts = Post.all()
-        posts.ancestor(parentblog)        
-        posts.order("-created_time")
-        template = JINJA_ENVIRONMENT.get_template('/templates/rss.xml')
-        self.response.write(template.render({'posts': posts}))
+#    def get(self, blogkey):
+#        parentblog = Blog.get_by_id(int(blogkey))    
+#        posts = Post.all()
+#        posts.ancestor(parentblog)        
+#        posts.order("-created_time")
+#        template = JINJA_ENVIRONMENT.get_template('/templates/rss.xml')
+#        self.response.write(template.render({'posts': posts}))
 
 class CommentHandler(webapp2.RequestHandler):
     def post(self, postkey):
@@ -321,7 +321,7 @@ app = webapp2.WSGIApplication([
     ('/singlepost/(.*)', SinglePost),
     ('/editpost/(.*)', EditPost),
     ('/tag/(.*)/(.*)', TagHandler),
-    ('/rss/(.*)', RssHandler),
+ #   ('/rss/(.*)', RssHandler),
     ('/image/(.*)', ImageHandler),
     ('/comment/(.*)', CommentHandler)
 ], debug=True)
